@@ -1,0 +1,51 @@
+source(output(
+		cus_id as integer,
+		cus_name as string,
+		cus_address as string,
+		cus_phone as string,
+		cus_email as string,
+		cus_date_of_birth as date,
+		cus_gender as string,
+		cus_city as string,
+		cus_country as string,
+		cus_since_date as date
+	),
+	allowSchemaDrift: true,
+	validateSchema: false,
+	ignoreNoFilesFound: false,
+	format: 'parquet') ~> sourceCustomer
+sourceCustomer select(mapColumn(
+		cus_id,
+		cus_name,
+		cus_address,
+		cus_phone,
+		cus_email,
+		cus_gender,
+		cus_date_of_birth,
+		cus_since_date
+	),
+	skipDuplicateMapInputs: true,
+	skipDuplicateMapOutputs: true) ~> selectCustomer
+selectCustomer sink(allowSchemaDrift: true,
+	validateSchema: false,
+	input(
+		cus_id as integer,
+		cus_name as string,
+		cus_address as string,
+		cus_phone as string,
+		cus_email as string,
+		cus_gender as string,
+		cus_date_of_birth as date,
+		cus_since_date as date
+	),
+	deletable:false,
+	insertable:true,
+	updateable:false,
+	upsertable:false,
+	format: 'table',
+	staged: true,
+	allowCopyCommand: true,
+	preSQLs:['SET IDENTITY_INSERT [dbo].[Dim_Customer] ON'],
+	skipDuplicateMapInputs: true,
+	skipDuplicateMapOutputs: true,
+	errorHandlingOption: 'stopOnFirstError') ~> sinkCustomer
